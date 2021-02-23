@@ -12,6 +12,8 @@ class Demopass::App
     @hmac_key = ENV["DEMOPASS_SECRET"]
     @password = ENV["DEMOPASS_PASSWORD"]
 
+    raise Demopass::Error, "Please configure DEMOPASS_SECRET and DEMOPASS_PASSWORD" unless @hmac_key && @password
+
     @digest = OpenSSL::Digest.new("SHA256")
     @valid_hmac = hmac_for(@password)
   end
@@ -60,7 +62,7 @@ private
         <title>Demopass authentication</title>
       </head>
       <body>
-        <h1>Please enter the demo password.</h1>
+        <h1>Please enter the demo password</h1>
         <form action="/demopass" method="post">
           <input type="password" name="#{PASSWORD_KEY}" />
           <button>Submit</button>
