@@ -23,4 +23,9 @@ task lint: :rubocop
 desc "Test"
 task test: :spec
 
+desc "Build"
+task :build do
+  system("gem build demopass.gemspec")
+end
+
 task default: :build_and_test
