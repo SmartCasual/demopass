@@ -98,6 +98,12 @@ RSpec/MultipleExpectations:
   Enabled: false
 RSpec/ExampleLength:
   Enabled: false
+RSpec/ContextWording:
+  Prefixes:
+    - but
+    - when
+    - with
+    - without
 Metrics/BlockLength:
   Exclude:
     - spec/**/*

@@ -4,10 +4,11 @@ require "demopass/app"
 require "rack"
 
 RSpec.describe Demopass::App do
-  subject(:app) { described_class.new(downstream) }
+  subject(:app) { described_class.new(downstream, except: except) }
 
   let(:lint_app) { Rack::Lint.new(app) }
   let(:downstream) { double(:rack_app) } # rubocop:disable RSpec/VerifiedDoubles
+  let(:except) { nil }
 
   let(:token_secret) { "this-is-a-secret" }
   let(:password) { "this-is-a-password" }
@@ -90,6 +91,17 @@ RSpec.describe Demopass::App do
         it "responds with a form" do
           expect(response.status).to eq(200)
           expect(response.body).to include("form")
+        end
+
+        context "but the URL is excluded" do
+          let(:except) { Regexp.new("^#{path}$") }
+
+          it "delegates to the downstream app and returns the result" do
+            downstream_response = [200, {}, ""]
+            allow(downstream).to receive(:call).with(env).and_return(downstream_response)
+
+            expect(app.call(env)).to eq(downstream_response)
+          end
         end
       end
 

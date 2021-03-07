@@ -5,22 +5,23 @@ class Demopass::App
   PASSWORD_KEY = "password".freeze
   TOKEN_KEY = "demopass_token".freeze
 
-  def initialize(downstream)
+  def initialize(downstream, except: nil)
     @downstream = downstream
+    @except = except
     @response = Rack::Response.new
 
     @hmac_key = ENV["DEMOPASS_SECRET"]
     @password = ENV["DEMOPASS_PASSWORD"]
 
-    raise Demopass::Error, "Please configure DEMOPASS_SECRET and DEMOPASS_PASSWORD" unless @hmac_key && @password
-
     @digest = OpenSSL::Digest.new("SHA256")
     @valid_hmac = hmac_for(@password)
+
+    validate_arguments
   end
 
   def call(env)
     request = Rack::Request.new(env)
-    return @downstream.call(env) if token_valid?(request)
+    return @downstream.call(env) if path_excluded?(request) || token_valid?(request)
 
     if (password = extract_password(request))
       assign_token_and_redirect(password)
@@ -32,6 +33,10 @@ class Demopass::App
   end
 
 private
+
+  def path_excluded?(request)
+    @except && request.path =~ @except
+  end
 
   def token_valid?(request)
     request.cookies[TOKEN_KEY] == @valid_hmac
@@ -73,5 +78,13 @@ private
 
   def respond_with_form
     @response.write(FORM)
+  end
+
+  def validate_arguments
+    if @except && !@except.is_a?(Regexp)
+      raise Demopass::Error, "The `except` option must be a regular expression (or blank)."
+    end
+
+    raise Demopass::Error, "Please configure DEMOPASS_SECRET and DEMOPASS_PASSWORD" unless @hmac_key && @password
   end
 end
