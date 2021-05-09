@@ -4,7 +4,7 @@ require "demopass/app"
 require "rack"
 
 RSpec.describe Demopass::App do
-  subject(:app) { described_class.new(downstream, except: except) }
+  subject(:app) { described_class.new(downstream, except: except, log_level: :none) }
 
   let(:lint_app) { Rack::Lint.new(app) }
   let(:downstream) { double(:rack_app) } # rubocop:disable RSpec/VerifiedDoubles
@@ -155,6 +155,23 @@ RSpec.describe Demopass::App do
           expect(response.status).to eq(302)
           expect(response.cookies[described_class::TOKEN_KEY]).not_to be_nil
           expect(response.cookies[described_class::TOKEN_KEY]).not_to eq("")
+        end
+      end
+
+      context "when the password is present and incorrect" do
+        let(:input) { StringIO.new("#{described_class::PASSWORD_KEY}=wrong_password") }
+
+        it "assigns the token and redirects to the form" do
+          expect(response.status).to eq(302)
+          expect(response.cookies[described_class::TOKEN_KEY]).not_to be_blank
+
+          # Follow redirect
+          env = Rack::MockRequest.env_for(response.location, method: Rack::GET)
+          env["HTTP_COOKIE"] = response.cookies.values.map(&:to_s).join(";")
+          response = Rack::MockResponse.new(*app.call(env), env[Rack::RACK_ERRORS])
+
+          expect(response.status).to eq(200)
+          expect(response.body).to include("form")
         end
       end
     end

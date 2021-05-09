@@ -1,4 +1,5 @@
 require "pry"
+require_relative "support/be_blank"
 require_relative "support/with_env"
 require_relative "../lib/demopass"
 

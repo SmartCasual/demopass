@@ -113,3 +113,7 @@ Style/TrailingCommaInArguments:
   EnforcedStyleForMultiline: consistent_comma
 Layout/MultilineMethodCallBraceLayout:
   EnforcedStyle: new_line
+Metrics/MethodLength:
+  Enabled: false
+Metrics/AbcSize:
+  Enabled: false
